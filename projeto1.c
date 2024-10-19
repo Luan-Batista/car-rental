@@ -1,6 +1,8 @@
 #include "projeto1.h"
 
 int readFile(FILE *fp){
+
+    fp = fopen("veiculos.dat", "rb");
     if(fp == NULL){
         perror("Erro ao abrir o arquivo veiculos.dat");
         return 1;
