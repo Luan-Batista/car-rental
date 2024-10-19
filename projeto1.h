@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-
+#define ordem 5
 #define licensePlateSize 8
 #define modelSize 20
 #define brandSize 20
@@ -17,4 +17,18 @@ typedef struct vehicle{
     char status[statusSize];
 }VEHICLE;
 
+typedef struct no{
+    char keys[ordem - 1];
+    int  rrn[ordem - 1];
+    struct no *children[ordem + 1];
+    int keyCount;
+    struct no *parent;
+}Node;
+
+typedef struct BTree{
+    Node *root;
+}BTree;
+
+
 int readFile(FILE *fp);
+
