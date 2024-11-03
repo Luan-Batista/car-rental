@@ -25,23 +25,22 @@ Node *createNode() {
 void print_node(FILE *fp, Node *node) {
     if (node == NULL) return; // Evita impressão se o nó for NULL
     
-    fprintf(fp, "RRN da página: %d\n", node->rrn_page);
-    fprintf(fp, "Chaves no nó: [");
+    fprintf(fp, "%d|%d|", node->rrn_page,node->keyCount);
     for (int i = 0; i < node->keyCount; i++) {
         fprintf(fp, "%s", node->key[i]);
         if (i < node->keyCount - 1) {
-            fprintf(fp, ", ");
+            fprintf(fp, "|");
         }
     }
-    fprintf(fp, "]\n");
+    fprintf(fp,"|");
 
-    fprintf(fp, "Filhos: ");
+
     for (int i = 0; i <= node->keyCount; i++) {
         if (node->children[i] != NULL) {
             fprintf(fp, "%d ", node->children[i]->rrn_page);
         }
     }
-    fprintf(fp, "\n\n");
+    fprintf(fp,"\n");
 }
 
 // Função recursiva que percorre toda a árvore
@@ -198,3 +197,36 @@ VEHICLE* readFile(FILE *fp) {
 
     return vehicle;
 }
+
+int verificaExistencia(const char *filename) {
+    FILE *fp = fopen(filename, "r");
+    if (fp != NULL) {
+        fclose(fp);
+        return 1;  // Arquivo existe
+    }
+    return 0;  // Arquivo não existe
+}
+
+//  Node *carregaRaizBTree(const char *filename) {
+//         FILE *fp = fopen(filename, "r+");
+//         if (fp == NULL) {
+//             perror("Erro ao abrir o arquivo btree.idx");
+//             return NULL;
+//         }
+
+//         Node *root = (Node *)malloc(sizeof(Node));
+//         if (root == NULL) {
+//             perror("Erro ao alocar memória para a raiz");
+//             fclose(fp);
+//             return NULL;
+//         }
+
+//         // Ler a raiz do arquivo (assumindo que a primeira linha contém a raiz)
+//         fscanf(fp, "%d|%d|", &root->rrn_page, &root->keyCount);
+//         for (int i = 0; i < root->keyCount; i++) {
+//             fscanf(fp, "%s", root->key[i]);
+//         }
+//         root->isLeaf = 1;
+//         fclose(fp);
+//         return root;
+// }

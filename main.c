@@ -30,7 +30,7 @@ int main() {
         insertBTree(tree,vehicle[i].licensePlate);
     }
 
-    for(int i=0;i<5;i++)
+    for(int i=0;i<qtdRecords;i++)
     {
         printf("Registro de RNN %d\n", i);
         printf("Placa: %s\n", vehicle[i].licensePlate);

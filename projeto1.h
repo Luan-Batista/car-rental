@@ -9,7 +9,7 @@
 #define brandSize 20
 #define categorySize 15
 #define statusSize 16
-#define qtdRecords 13
+#define qtdRecords 14
 // Variável global para controle do próximo RRN
 
 typedef struct vehicle {
@@ -47,3 +47,6 @@ void insertBTree(BTree *tree, char *key);
 void printBTree(Node *node, int level);
 void printAllNodes(FILE *fp, Node *node);
 void printBTreeToFile(Node *node);
+int buscarCarroNaArvore(BTree *tree);
+int verificaExistencia(const char *filename);
+// Node *carregaRaizBTree(const char *filename);
