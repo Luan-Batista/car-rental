@@ -1,64 +1,93 @@
-// int main(){
-//     // FILE *fp = NULL; 
-//     Node *root = createNode();
-//     insertBTree(&root, "abc123");
-//     insertBTree(&root, "def456");
-//     insertBTree(&root, "ghi789");
-//     insertBTree(&root, "jkl012");
-//     insertBTree(&root, "mno345");
+#include <stdio.h>
+#include <stdlib.h>
+#include "projeto1.c"
 
-//     print_node(root);
-//     // VEHICLE *vehicle = malloc(10*sizeof(VEHICLE));
-//     // vehicle = readFile(fp);
-//     // int op;
-// }
-
-#include "projeto1.h"
 int main() {
-    // Criar a árvore B
+    int ch;
+    int op;
     FILE *fp = NULL;
-    FILE *fp2 = NULL;
-    fp2 = fopen("btree.idx","w");
-    BTree *tree = createBTree();
-    VEHICLE *vehicle = readFile(fp);
-    
+    int existe = verificaExistencia("btree_M.idx");
+    Veiculo *veiculo = readFile();
 
-    // Inserir algumas chaves
-
-    for(int i=0;i<qtdRecords;i++)
-    {
-        insertBTree(tree,vehicle[i].licensePlate);
-    }
-
-    for(int i=0;i<qtdRecords;i++)
-    {
-        printf("Registro de RNN %d\n", i);
-        printf("Placa: %s\n", vehicle[i].licensePlate);
-        printf("Modelo: %s\n", vehicle[i].model);
-        printf("Marca: %s\n", vehicle[i].brand);
-        printf("Ano: %d\n", vehicle[i].year);
-        printf("Categoria: %s\n", vehicle[i].category);
-        printf("Quilometragem: %d\n", vehicle[i].km);
-        printf("Status: %s\n", vehicle[i].status);
+    // Exibir todos os registros de veículos
+    for (int i = 0; i < qtdRecords; i++) {
+        printf("Registro de RRN %d\n", i);
+        printf("Placa: %s\n", veiculo[i].placa);
+        printf("Modelo: %s\n", veiculo[i].modelo);
+        printf("Marca: %s\n", veiculo[i].marca);
+        printf("Ano: %d\n", veiculo[i].ano);
+        printf("Categoria: %s\n", veiculo[i].categoria);
+        printf("Quilometragem: %d\n", veiculo[i].quilometragem);
+        printf("Status: %s\n", veiculo[i].status);
         printf("---------------------------\n");
     }
 
-    
-    printAllNodes(fp2,tree->root);
-    // Imprimir a árvore B
-    // printf("Árvore B:\n");
-    // printBTree(tree->root, 0);
+    if (existe == 1) {
+        // Carregar a raiz se o arquivo existir
+        root = carregarRaiz("btree_M.idx");
+    } else {
+        // Criar um novo arquivo e inicializar a árvore se o arquivo não existir
+        fp = fopen("btree_M.idx", "w");
+        if (fp == NULL) {
+            perror("Erro ao criar o arquivo de índice");
+            return 1;
+        }
+
+        // Inserir todos os veículos na árvore
+        for (int i = 0; i < qtdRecords; i++) {
+            insert(veiculo[i].placa);
+          
+        }
+
+        // Gravar a estrutura inicial da árvore no arquivo e fechar
+        // traversal(root, fp);
+        fclose(fp);
+    }
+
+    // Menu de operações para o usuário
+    do {
+        printf("\nMenu:\n");
+        printf("1. Inserir um veículo\n");
+        printf("2. Remover um veículo\n");
+        printf("4. Buscar Veículo\n");
+        printf("5. Listar todos os veículos\n");
+        printf("0. Sair\n");
+        scanf("%d", &op);
+
+        switch (op) {
+            case 1:
+                // Inserir um novo veículo
+                    insert("HHC8765");
+                   
+                break;
+
+            case 2:
+                // Lógica para remover um veículo (implementar se necessário)
+                break;
+
+            case 4:
+                // Lógica para buscar um veículo
+                printf("Digite a placa para buscar: ");
+                char placa[8];
+                scanf("%s", placa);
+                search(placa, root);
+                break;
+
+            case 5:
+                // Exibir todos os veículos e salvar a árvore no arquivo
+                fp = fopen("btree_M.idx", "w");
+                if (fp != NULL) {
+                    traversal(root, fp);
+                    fclose(fp);
+                } else {
+                    perror("Erro ao abrir o arquivo para gravação");
+                }
+                break;
+        }
+    } while (op != 0);
+
+    // Liberar a memória dos veículos
+    free(veiculo);
 
     return 0;
 }
-
-
-
-    // char keys[ordem - 1];
-    // int  rrn[ordem - 1];
-    // struct no *children[ordem + 1];
-    // int keyCount;
-    // struct no *parent;
-    // int isLeaf;
-
-

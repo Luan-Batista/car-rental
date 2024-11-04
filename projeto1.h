@@ -2,51 +2,62 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define ordem 5
-#define MAX_KEYS (ordem - 1)
-#define licensePlateSize 8
-#define modelSize 20
-#define brandSize 20
-#define categorySize 15
-#define statusSize 16
-#define qtdRecords 14
-// Variável global para controle do próximo RRN
+#define TAMANHO_PLACA 8
+#define TAMANHO_MODELO 20
+#define TAMANHO_MARCA 20
+#define TAMANHO_CATEGORIA 15
+#define TAMANHO_STATUS 16
+#define qtdRecords 30
 
-typedef struct vehicle {
-    char licensePlate[licensePlateSize];
-    char model[modelSize];
-    char brand[brandSize];
-    int year;
-    char category[categorySize];
-    int km;
-    char status[statusSize];
-} VEHICLE;
+#define MAX 5
+#define MIN 2
 
-typedef struct no Node;
 
-struct no {
-   char key[MAX_KEYS][licensePlateSize];
-   Node* children[ordem];
-   int rrn_page; // Adicionei essa variável para os nós, mas verifique se ela é necessária
-   int keyCount;
-   int isLeaf;
+struct BTreeNode {
+  char val[MAX + 1][8], count;
+  struct BTreeNode *link[MAX + 1];
+  int rrn;  // Novo campo para armazenar o RRN do nó
+  int rrn_carro;
 };
 
-typedef struct {
-    Node *root;
-} BTree;
+struct BTreeNode *root;
+int current_rrn = 1;  // Variável global para controlar o RRN sequencial
+struct BTreeNode *createNode(char *val, struct BTreeNode *child) {
+  struct BTreeNode *newNode;
+  newNode = (struct BTreeNode *)malloc(sizeof(struct BTreeNode));
+  strcpy(newNode->val[1],val);
+  newNode->count = 1;
+  newNode->link[0] = root;
+  newNode->link[1] = child;
+  newNode->rrn = current_rrn++;  // Atribui o próximo RRN e incrementa
+  newNode->rrn_carro = 0;
+  return newNode;
+}
 
-// Funções
-VEHICLE *readFile(FILE *fp);
-Node *createNode();
-BTree* createBTree();
-void print_node(FILE *fp, Node *node);
-void insertNonFull(Node *node, char *key);
-void splitChild(Node *parentNode, int index, Node *fullChild);
-void insertBTree(BTree *tree, char *key);
-void printBTree(Node *node, int level);
-void printAllNodes(FILE *fp, Node *node);
-void printBTreeToFile(Node *node);
-int buscarCarroNaArvore(BTree *tree);
+
+
+struct BTreeNode *root = NULL;  // Ponteiro para a raiz
+
+typedef struct {
+char placa[TAMANHO_PLACA];
+char modelo[TAMANHO_MODELO];
+char marca[TAMANHO_MARCA];
+int ano;
+char categoria[TAMANHO_CATEGORIA];
+int quilometragem;
+char status[TAMANHO_STATUS];
+} Veiculo;
+
+
+Veiculo *readFile();
+struct BTreeNode *carregarRaiz(const char *nomeArquivo);
+void search(char *val, struct BTreeNode *myNode);
+void insertNode(char *val, int pos, struct BTreeNode *node, struct BTreeNode *child);
+void splitNode(char* val, char *pval, int pos, struct BTreeNode *node,struct BTreeNode *child, struct BTreeNode **newNode);
+int setValue(char* val, char *pval,struct BTreeNode *node, struct BTreeNode **child);
+void insert(char* val) ;
+void traversal(struct BTreeNode *myNode,FILE *fp);
 int verificaExistencia(const char *filename);
-// Node *carregaRaizBTree(const char *filename);
+void salvarArvoreNoArquivo(struct BTreeNode *root);
+void gravarNoArquivo(struct BTreeNode *node, FILE *fp);
+Veiculo *carregarVeiculoPorRRN(int rrn);

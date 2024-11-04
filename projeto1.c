@@ -1,201 +1,294 @@
+#include <stdio.h>
+#include <stdlib.h>
 #include "projeto1.h"
-int nextRRN = 0;
-
-// Função para criar um novo nó
-Node *createNode() {
-    Node *newNode = (Node *)malloc(sizeof(Node));
-    if (newNode == NULL) {
-        perror("Erro ao alocar nó");
-        exit(1);
-    }
-
-    for (int i = 0; i < MAX_KEYS; i++) {
-        strcpy(newNode->key[i], "");
-    }
-    for (int i = 0; i < ordem; i++) {
-        newNode->children[i] = NULL;  // Inicializar filhos com NULL
-    }
-    newNode->keyCount = 0;
-    newNode->isLeaf = 1;
-    newNode->rrn_page = nextRRN++; // Atribuir o RRN atual e incrementar
-
-    return newNode;
-}
-
-void print_node(FILE *fp, Node *node) {
-    if (node == NULL) return; // Evita impressão se o nó for NULL
-    
-    fprintf(fp, "%d|%d|", node->rrn_page,node->keyCount);
-    for (int i = 0; i < node->keyCount; i++) {
-        fprintf(fp, "%s", node->key[i]);
-        if (i < node->keyCount - 1) {
-            fprintf(fp, "|");
-        }
-    }
-    fprintf(fp,"|");
 
 
-    for (int i = 0; i <= node->keyCount; i++) {
-        if (node->children[i] != NULL) {
-            fprintf(fp, "%d ", node->children[i]->rrn_page);
-        }
-    }
-    fprintf(fp,"\n");
-}
 
-// Função recursiva que percorre toda a árvore
-void printAllNodes(FILE *fp, Node *node) {
-    if (node != NULL) {
-        print_node(fp, node);  // Imprime o nó atual
-        for (int i = 0; i <= node->keyCount; i++) {
-            printAllNodes(fp, node->children[i]);  // Imprime os filhos
-        }
-    }
-}
-
-// Função principal que abre o arquivo e chama a função recursiva
-void printBTreeToFile(Node *root) {
-    FILE *fp = fopen("btree.idx", "w");  // Abre o arquivo no modo "w" para escrita
+// Função para carregar a raiz da Árvore B a partir de um arquivo
+struct BTreeNode *carregarRaiz(const char *nomeArquivo) {
+    FILE *fp = fopen(nomeArquivo, "r+");
     if (fp == NULL) {
-        perror("Erro ao abrir o arquivo btree.idx para escrita");
-        return;
-    }
-
-    printAllNodes(fp, root);  // Chama a função para imprimir todos os nós, começando pela raiz
-    fclose(fp);  // Fecha o arquivo após terminar a impressão
-}
-
-
-
-
-
-// Função para dividir um nó quando está cheio
-// Função para dividir um nó quando está cheio
-void splitChild(Node *parent, int index, Node *fullChild) {
-    Node *newNode = createNode();
-    newNode->isLeaf = fullChild->isLeaf;
-
-    // Metade superior das chaves do nó cheio
-    int midIndex = fullChild->keyCount / 2;  // Índice do meio
-
-    // Copia as chaves superiores para o novo nó
-    for (int i = midIndex + 1; i < fullChild->keyCount; i++) {
-        strcpy(newNode->key[newNode->keyCount++], fullChild->key[i]);
-    }
-
-    // Remove a chave do meio do nó cheio
-    fullChild->keyCount = midIndex; // Agora o nó cheio contém apenas as chaves inferiores
-
-    // Atualiza o nó pai
-
-    for (int i = parent->keyCount; i >= index + 1; i--) {
-        parent->children[i + 1] = parent->children[i];
-    }
-    parent->children[index + 1] = newNode;
-
-    for (int i = parent->keyCount - 1; i >= index; i--) {
-        strcpy(parent->key[i + 1], parent->key[i]);
-    }
-    strcpy(parent->key[index], fullChild->key[midIndex]); // Promove a chave do meio
-    parent->keyCount++;
-}
-
-
-// Função para inserir uma chave em um nó não cheio
-void insertNonFull(Node *node, char *key) {
-    int i = node->keyCount - 1;
-
-    if (node->isLeaf) {
-        // Encontra a posição de inserção e move as chaves para abrir espaço
-        while (i >= 0 && strcmp(key, node->key[i]) < 0) {
-            strcpy(node->key[i + 1], node->key[i]);
-            i--;
-        }
-        strcpy(node->key[i + 1], key);
-        node->keyCount++;
-    } else {
-        // Encontra o filho onde a chave deve ser inserida
-        while (i >= 0 && strcmp(key, node->key[i]) < 0) {
-            i--;
-        }
-        i++;
-
-        // Se o filho estiver cheio, divida-o
-        if (node->children[i]->keyCount == MAX_KEYS) {
-            splitChild(node, i, node->children[i]);
-            if (strcmp(key, node->key[i]) > 0) {
-                i++;
-            }
-        }
-        insertNonFull(node->children[i], key);
-    }
-}
-
-// Função principal de inserção
-void insertBTree(BTree *tree, char *key) {
-    Node *r = tree->root;
-    if (r->keyCount == MAX_KEYS) {  // Se o nó raiz estiver cheio
-        Node *newRoot = createNode();
-        newRoot->isLeaf = 0;
-        newRoot->children[0] = r;  // A raiz antiga se torna o primeiro filho
-        splitChild(newRoot, 0, r);  // Dividir a raiz
-        insertNonFull(newRoot, key); // Inserir a nova chave
-        tree->root = newRoot; // Atualizar a raiz da árvore
-    } else {
-        insertNonFull(r, key); // Inserir a chave no nó raiz
-    }
-}
-
-// void printBTree(Node *node, int level) {
-//     if (node != NULL) {
-//         printf("Nível %d: ", level);
-//         print_node(node);
-
-//         for (int i = 0; i <= node->keyCount; i++) {
-//             printBTree(node->children[i], level + 1);
-//         }
-//     }
-// }
-
-BTree *createBTree() {
-    BTree *newTree = (BTree *)malloc(sizeof(BTree));
-    newTree->root = createNode();
-    return newTree;
-}
-
-
-
-VEHICLE* readFile(FILE *fp) {
-    fp = fopen("veiculos.dat", "rb");
-    if (fp == NULL) {
-        perror("Erro ao abrir o arquivo veiculos.dat");
+        perror("Erro ao abrir o arquivo btree_M.idx");
         return NULL;
     }
 
-    size_t recordSize = sizeof(VEHICLE);
+    struct BTreeNode *root = (struct BTreeNode *)malloc(sizeof(struct BTreeNode));
+    if (root == NULL) {
+        perror("Erro ao alocar memória para a raiz");
+        fclose(fp);
+        return NULL;
+    }
+
+    // Ler a raiz do arquivo (assumindo que a primeira linha contém a raiz)
+    fseek(fp, 0, SEEK_SET);
+    fscanf(fp, "%d|%c|", &root->rrn, &root->count);
+    for (int i = 0; i < root->count; i++) {  
+        fscanf(fp, "%7s|", root->val[i]);
+    }
+
+    for (int i = 0; i <= root->count; i++) {
+        root->link[i] = (struct BTreeNode *)malloc(sizeof(struct BTreeNode));  
+        if (root->link[i] == NULL) {
+            fprintf(stderr, "Erro ao alocar memória para o filho %d\n", i);
+            for (int j = 0; j < i; j++) {
+                free(root->link[j]);  // Liberar memória já alocada
+            }
+            free(root);
+            fclose(fp);
+            return NULL;
+        }
+
+        // Ler o rrn_page para cada filho
+        if (fscanf(fp, "%d", &root->link[i]->rrn) != 1) {
+            fprintf(stderr, "Erro ao ler o rrn_page do filho %d\n", i);
+            for (int j = 0; j <= i; j++) {
+                free(root->link[j]);
+            }
+            free(root);
+            fclose(fp);
+            return NULL;
+        }
+    }
+
+    fclose(fp);
+    return root;
+}
+
+
+Veiculo *readFile(){
+FILE *fp = fopen("veiculos.dat", "rb");
+    if (fp == NULL) {
+    perror("Erro ao abrir o arquivo veiculos.dat");
+    }
+
+
+    size_t recordSize = sizeof(Veiculo);
     int numRecords = qtdRecords;  // Número de registros a serem lidos
 
     // Alocar memória para múltiplos registros de VEHICLE
-    VEHICLE *vehicle = (VEHICLE*)malloc(numRecords * sizeof(VEHICLE));
-    if (vehicle == NULL) {
+    Veiculo *veiculo = (Veiculo*)malloc(numRecords * sizeof(Veiculo));
+    if (veiculo == NULL) {
         perror("Erro ao alocar memória");
         fclose(fp);
         return NULL;
     }
 
     // Ler registros do arquivo
-    size_t recordsRead = fread(vehicle, recordSize, numRecords, fp);
-    if (recordsRead < numRecords) {
+    size_t recordsRead = fread(veiculo, recordSize, numRecords, fp);
+
+    if (recordsRead < numRecords) { 
         printf("Erro ao ler o registro\n");
         fclose(fp);
-        free(vehicle);
+        free(veiculo);
         return NULL;
     }
 
     // Fechar o arquivo após a leitura
     fclose(fp);
 
-    return vehicle;
+    return veiculo;
+
+}
+
+void search(char *val, struct BTreeNode *myNode) {
+    int pos;
+    if (!myNode) {
+        printf("Veículo com placa %s não encontrado.\n", val);
+        return;
+    }
+
+    // Procura pela chave na Árvore B
+    if (strcmp(val, myNode->val[1]) < 0) {
+        pos = 0;
+    } else {
+        for (pos = myNode->count; (strcmp(val, myNode->val[pos]) < 0 && pos > 1); pos--)
+            ;
+        if (strcmp(val, myNode->val[pos]) == 0) {
+            int rrn = myNode->rrn;  // Obtém o RRN associado
+          
+            printf("Placa %s encontrada. RRN: %d\n", val, rrn);
+
+            // Carrega o veículo pelo RRN
+            Veiculo *veiculo = carregarVeiculoPorRRN(rrn);
+            if (veiculo) {
+                printf("Informações do veículo:\n");
+                printf("Placa: %s\n", veiculo->placa);
+                printf("Modelo: %s\n", veiculo->modelo);
+                printf("Marca: %s\n", veiculo->marca);
+                printf("Ano: %d\n", veiculo->ano);
+                printf("Categoria: %s\n", veiculo->categoria);
+                printf("Quilometragem: %d\n", veiculo->quilometragem);
+                printf("Disponibilidade: %s\n", veiculo->status);
+                free(veiculo);
+            }
+            return;
+        }
+    }
+
+    // Continua a busca recursivamente nos filhos
+    search(val, myNode->link[pos]);
+}
+// Insert node
+void insertNode(char *val, int pos, struct BTreeNode *node,
+        struct BTreeNode *child) {
+  int j = node->count;
+  while (j > pos) {
+    strcpy(node->val[j + 1],node->val[j]);
+    node->link[j + 1] = node->link[j];
+    j--;
+  }
+  strcpy(node->val[j + 1],val);
+  node->link[j + 1] = child;
+  node->count++;
+}
+
+// Split node
+void splitNode(char* val, char *pval, int pos, struct BTreeNode *node,
+         struct BTreeNode *child, struct BTreeNode **newNode) {
+  int median, j;
+
+  if (pos > MIN)
+    median = MIN + 1;
+  else
+    median = MIN;
+
+  *newNode = (struct BTreeNode *)malloc(sizeof(struct BTreeNode));
+  (*newNode)->rrn = current_rrn++;  // Atribui o próximo RRN ao novo nó
+  j = median + 1;
+  while (j <= MAX) {
+    strcpy((*newNode)->val[j - median],node->val[j]);
+    (*newNode)->link[j - median] = node->link[j];
+    j++;
+  }
+  node->count = median;
+  (*newNode)->count = MAX - median;
+
+  if (pos <= MIN) {
+    insertNode(val, pos, node, child);
+  } else {
+    insertNode(val, pos - median, *newNode, child);
+  }
+  strcpy(pval, node->val[node->count]);
+  (*newNode)->link[0] = node->link[node->count];
+  node->count--;
+}
+
+// Set the value
+int setValue(char* val, char *pval,
+           struct BTreeNode *node, struct BTreeNode **child) {
+  int pos;
+  if (!node) {
+    strcpy(pval, val);
+    *child = NULL;
+    return 1;
+  }
+
+  if (strcmp(val,node->val[1])<0) {
+    pos = 0;
+  } else {
+    for (pos = node->count;
+       (strcmp(val, node->val[pos]) < 0 && pos > 1); pos--);
+    if (strcmp(val,node->val[pos])==0) {
+      printf("Duplicates are not permitted\n");
+      return 0;
+    }
+  }
+  if (setValue(val, pval, node->link[pos], child)) {
+    if (node->count < MAX) {
+      insertNode(pval, pos, node, *child);
+    } else {
+      splitNode(pval, pval, pos, node, *child, child);
+      return 1;
+    }
+  }
+  return 0;
+}
+void gravarNoArquivo(struct BTreeNode *node, FILE *fp) {
+    if (!node) return;
+
+    // Escreve o RRN do nó
+    fprintf(fp, "%d|", node->rrn);
+
+    // Escreve o número de chaves
+    fprintf(fp, "%d|", node->count);
+
+    // Escreve as chaves no nó
+    for (int i = 1; i <= node->count; i++) {
+        fprintf(fp, "%s", node->val[i]);
+        if (i < node->count) fprintf(fp, ",");  // Separador de chaves
+    }
+    fprintf(fp, "|");
+
+    // Escreve os RRNs dos filhos
+    for (int i = 0; i <= node->count; i++) {
+        if (node->link[i]) {
+            fprintf(fp, "%d ", node->link[i]->rrn);
+        } else {
+            fprintf(fp, "-1 ");  // Indica que não há filho
+        }
+    }
+    fprintf(fp, "\n");
+
+    // Grava recursivamente os nós filhos
+    for (int i = 0; i <= node->count; i++) {
+        if (node->link[i]) {
+            gravarNoArquivo(node->link[i], fp);
+        }
+    }
+}
+
+void salvarArvoreNoArquivo(struct BTreeNode *root) {
+    FILE *fp = fopen("btree_M.idx", "w");
+    if (!fp) {
+        perror("Erro ao abrir o arquivo para gravação");
+        return;
+    }
+    gravarNoArquivo(root, fp);
+    fclose(fp);
+}
+
+// Insert the value
+void insert(char* val) {
+    int flag;
+    struct BTreeNode *child;
+    char pval[8];
+
+    flag = setValue(val, pval, root, &child);
+    if (flag) {
+        root = createNode(pval, child);
+    }
+
+    // Salva a árvore no arquivo após a inserção
+    salvarArvoreNoArquivo(root);
+}
+
+// Traversal function modified to show RRN|key_count|keys|children format
+void traversal(struct BTreeNode *myNode, FILE *fp) {
+    if (!myNode) return;
+
+    // Print the RRN of the node
+    fprintf(fp, "%d|", myNode->rrn);
+
+    // Print the number of keys in the node
+    fprintf(fp, "%d|", myNode->count);
+
+    // Print all keys in the node
+    for (int i = 1; i <= myNode->count; i++) {
+        fprintf(fp, "%s", myNode->val[i]);
+        if (i < myNode->count) fprintf(fp, ",");  // comma separate keys
+    }
+    fprintf(fp, "|");
+
+    // Print children RRN
+    for (int i = 0; i <= myNode->count; i++) {
+        if (myNode->link[i]) fprintf(fp, "%d ", myNode->link[i]->rrn);
+    }
+    fprintf(fp, "\n");
+
+    // Recursive traversal for each child node
+    for (int i = 0; i <= myNode->count; i++) {
+        if (myNode->link[i]) traversal(myNode->link[i], fp);
+    }
 }
 
 int verificaExistencia(const char *filename) {
@@ -207,26 +300,32 @@ int verificaExistencia(const char *filename) {
     return 0;  // Arquivo não existe
 }
 
-//  Node *carregaRaizBTree(const char *filename) {
-//         FILE *fp = fopen(filename, "r+");
-//         if (fp == NULL) {
-//             perror("Erro ao abrir o arquivo btree.idx");
-//             return NULL;
-//         }
+Veiculo *carregarVeiculoPorRRN(int rrn) {
+    FILE *fp = fopen("veiculos.dat", "rb");
+    if (!fp) {
+        perror("Erro ao abrir o arquivo de veículos");
+        return NULL;
+    }
 
-//         Node *root = (Node *)malloc(sizeof(Node));
-//         if (root == NULL) {
-//             perror("Erro ao alocar memória para a raiz");
-//             fclose(fp);
-//             return NULL;
-//         }
+    Veiculo *veiculo = (Veiculo *)malloc(sizeof(Veiculo));
+    if (!veiculo) {
+        perror("Erro ao alocar memória para o veículo");
+        fclose(fp);
+        return NULL;
+    }
 
-//         // Ler a raiz do arquivo (assumindo que a primeira linha contém a raiz)
-//         fscanf(fp, "%d|%d|", &root->rrn_page, &root->keyCount);
-//         for (int i = 0; i < root->keyCount; i++) {
-//             fscanf(fp, "%s", root->key[i]);
-//         }
-//         root->isLeaf = 1;
-//         fclose(fp);
-//         return root;
-// }
+    // Calcula o offset com base no tamanho do registro e no RRN
+    long offset = rrn * sizeof(Veiculo);
+    fseek(fp, offset, SEEK_SET);
+
+    // Lê o registro do veículo
+    if (fread(veiculo, sizeof(Veiculo), 1, fp) != 1) {
+        perror("Erro ao ler o veículo do arquivo");
+        free(veiculo);
+        fclose(fp);
+        return NULL;
+    }
+
+    fclose(fp);
+    return veiculo;
+}
