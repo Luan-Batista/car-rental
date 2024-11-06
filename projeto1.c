@@ -3,6 +3,17 @@
 #include "projeto1.h"
 
 
+struct BTreeNode *createNode(char *val, int rrn_carro, struct BTreeNode *child) {
+  struct BTreeNode *newNode;
+  newNode = (struct BTreeNode *)malloc(sizeof(struct BTreeNode));
+  strcpy(newNode->val.chave[1],val);
+  newNode->count = 1;
+  newNode->link[0] = root;
+  newNode->link[1] = child;
+  newNode->rrn = current_rrn++;  // Atribui o próximo RRN e incrementa
+  newNode->val.rrn_carro = rrn_carro;
+  return newNode;
+}
 
 // Função para carregar a raiz da Árvore B a partir de um arquivo
 struct BTreeNode *carregarRaiz(const char *nomeArquivo) {
@@ -23,7 +34,7 @@ struct BTreeNode *carregarRaiz(const char *nomeArquivo) {
     fseek(fp, 0, SEEK_SET);
     fscanf(fp, "%d|%c|", &root->rrn, &root->count);
     for (int i = 0; i < root->count; i++) {  
-        fscanf(fp, "%7s|", root->val[i]);
+        fscanf(fp, "%7s|", root->val.chave[i]);
     }
 
     for (int i = 0; i <= root->count; i++) {
@@ -98,18 +109,17 @@ void search(char *val, struct BTreeNode *myNode) {
     }
 
     // Procura pela chave na Árvore B
-    if (strcmp(val, myNode->val[1]) < 0) {
+    if (strcmp(val, myNode->val.chave[1]) < 0) {
         pos = 0;
     } else {
-        for (pos = myNode->count; (strcmp(val, myNode->val[pos]) < 0 && pos > 1); pos--)
-            ;
-        if (strcmp(val, myNode->val[pos]) == 0) {
-            int rrn = myNode->rrn;  // Obtém o RRN associado
-          
-            printf("Placa %s encontrada. RRN: %d\n", val, rrn);
+        for (pos = myNode->count; (strcmp(val, myNode->val.chave[pos]) < 0 && pos > 1); pos--);
+        if (strcmp(val, myNode->val.chave[pos]) == 0) {
+            int rrn_carro = myNode->val.rrn_carro;  // Obtém o RRN associado à chave
+            printf("%d",rrn_carro);
+            printf("Placa %s encontrada. RRN do Veículo: %d\n", val, rrn_carro);
 
             // Carrega o veículo pelo RRN
-            Veiculo *veiculo = carregarVeiculoPorRRN(rrn);
+            Veiculo *veiculo = carregarVeiculoPorRRN(rrn_carro);
             if (veiculo) {
                 printf("Informações do veículo:\n");
                 printf("Placa: %s\n", veiculo->placa);
@@ -128,81 +138,92 @@ void search(char *val, struct BTreeNode *myNode) {
     // Continua a busca recursivamente nos filhos
     search(val, myNode->link[pos]);
 }
+
+
 // Insert node
-void insertNode(char *val, int pos, struct BTreeNode *node,
-        struct BTreeNode *child) {
-  int j = node->count;
-  while (j > pos) {
-    strcpy(node->val[j + 1],node->val[j]);
-    node->link[j + 1] = node->link[j];
-    j--;
-  }
-  strcpy(node->val[j + 1],val);
-  node->link[j + 1] = child;
-  node->count++;
+void insertNode(char *val, int rrn_carro, int pos, struct BTreeNode *node, struct BTreeNode *child) {
+    int j = node->count;
+    while (j > pos) {
+        strcpy(node->val.chave[j + 1], node->val.chave[j]);
+        node->link[j + 1] = node->link[j];
+        j--;
+    }
+    strcpy(node->val.chave[j + 1], val);
+    node->val.rrn_carro = rrn_carro;  // Armazena o rrn_carro na chave
+    node->link[j + 1] = child;
+    node->count++;
 }
+
 
 // Split node
-void splitNode(char* val, char *pval, int pos, struct BTreeNode *node,
-         struct BTreeNode *child, struct BTreeNode **newNode) {
-  int median, j;
+void splitNode(char *val, int rrn_carro, char *pval, int *p_rrn_carro, int pos,
+               struct BTreeNode *node, struct BTreeNode *child, struct BTreeNode **newNode) {
+    int median, j;
 
-  if (pos > MIN)
-    median = MIN + 1;
-  else
-    median = MIN;
+    if (pos > MIN)
+        median = MIN + 1;
+    else
+        median = MIN;
 
-  *newNode = (struct BTreeNode *)malloc(sizeof(struct BTreeNode));
-  (*newNode)->rrn = current_rrn++;  // Atribui o próximo RRN ao novo nó
-  j = median + 1;
-  while (j <= MAX) {
-    strcpy((*newNode)->val[j - median],node->val[j]);
-    (*newNode)->link[j - median] = node->link[j];
-    j++;
-  }
-  node->count = median;
-  (*newNode)->count = MAX - median;
+    *newNode = (struct BTreeNode *)malloc(sizeof(struct BTreeNode));
+    (*newNode)->rrn = current_rrn++;  // Atribui o próximo RRN ao novo nó
+    j = median + 1;
+    while (j <= MAX) {
+        strcpy((*newNode)->val.chave[j - median], node->val.chave[j]);
+        (*newNode)->link[j - median] = node->link[j];
+        j++;
+    }
+    node->count = median;
+    (*newNode)->count = MAX - median;
 
-  if (pos <= MIN) {
-    insertNode(val, pos, node, child);
-  } else {
-    insertNode(val, pos - median, *newNode, child);
-  }
-  strcpy(pval, node->val[node->count]);
-  (*newNode)->link[0] = node->link[node->count];
-  node->count--;
+    if (pos <= MIN) {
+        insertNode(val, rrn_carro, pos, node, child);
+    } else {
+        insertNode(val, rrn_carro, pos - median, *newNode, child);
+    }
+    strcpy(pval, node->val.chave[node->count]);
+    *p_rrn_carro = node->val.rrn_carro;  // Atualiza o rrn_carro promovido
+    (*newNode)->link[0] = node->link[node->count];
+    node->count--;
 }
+
+
+
 
 // Set the value
-int setValue(char* val, char *pval,
-           struct BTreeNode *node, struct BTreeNode **child) {
-  int pos;
-  if (!node) {
-    strcpy(pval, val);
-    *child = NULL;
-    return 1;
-  }
+int setValue(char *val, int rrn_carro, char *pval, int *p_rrn_carro,
+             struct BTreeNode *node, struct BTreeNode **child) {
+    int pos;
+    if (!node) {
+        strcpy(pval, val);
+        *p_rrn_carro = rrn_carro;  // Atribui o rrn_carro ao novo valor promovido
+        *child = NULL;
+        return 1;
+    }
 
-  if (strcmp(val,node->val[1])<0) {
-    pos = 0;
-  } else {
-    for (pos = node->count;
-       (strcmp(val, node->val[pos]) < 0 && pos > 1); pos--);
-    if (strcmp(val,node->val[pos])==0) {
-      printf("Duplicates are not permitted\n");
-      return 0;
-    }
-  }
-  if (setValue(val, pval, node->link[pos], child)) {
-    if (node->count < MAX) {
-      insertNode(pval, pos, node, *child);
+    if (strcmp(val, node->val.chave[1]) < 0) {
+        pos = 0;
     } else {
-      splitNode(pval, pval, pos, node, *child, child);
-      return 1;
+        for (pos = node->count;
+             (strcmp(val, node->val.chave[pos]) < 0 && pos > 1); pos--);
+        if (strcmp(val, node->val.chave[pos]) == 0) {
+            printf("Chaves duplicadas não são permitidas\n");
+            return 0;
+        }
     }
-  }
-  return 0;
+
+    if (setValue(val, rrn_carro, pval, p_rrn_carro, node->link[pos], child)) {
+        if (node->count < MAX) {
+            insertNode(pval, *p_rrn_carro, pos, node, *child);
+        } else {
+            splitNode(pval, rrn_carro, pval, p_rrn_carro, pos, node, *child, child);
+            return 1;
+        }
+    }
+    return 0;
 }
+
+
 void gravarNoArquivo(struct BTreeNode *node, FILE *fp) {
     if (!node) return;
 
@@ -214,7 +235,7 @@ void gravarNoArquivo(struct BTreeNode *node, FILE *fp) {
 
     // Escreve as chaves no nó
     for (int i = 1; i <= node->count; i++) {
-        fprintf(fp, "%s", node->val[i]);
+        fprintf(fp, "%s", node->val.chave[i]);
         if (i < node->count) fprintf(fp, ",");  // Separador de chaves
     }
     fprintf(fp, "|");
@@ -248,19 +269,21 @@ void salvarArvoreNoArquivo(struct BTreeNode *root) {
 }
 
 // Insert the value
-void insert(char* val) {
+void insert(char *val, int rrn_carro) {
     int flag;
     struct BTreeNode *child;
     char pval[8];
-
-    flag = setValue(val, pval, root, &child);
+    
+    int p_rrn_carro = 0;
+    flag = setValue(val, rrn_carro, pval, &p_rrn_carro, root, &child);
     if (flag) {
-        root = createNode(pval, child);
+        root = createNode(pval, rrn_carro, child);
     }
 
     // Salva a árvore no arquivo após a inserção
     salvarArvoreNoArquivo(root);
 }
+
 
 // Traversal function modified to show RRN|key_count|keys|children format
 void traversal(struct BTreeNode *myNode, FILE *fp) {
@@ -274,7 +297,7 @@ void traversal(struct BTreeNode *myNode, FILE *fp) {
 
     // Print all keys in the node
     for (int i = 1; i <= myNode->count; i++) {
-        fprintf(fp, "%s", myNode->val[i]);
+        fprintf(fp, "%s", myNode->val.chave[i]);
         if (i < myNode->count) fprintf(fp, ",");  // comma separate keys
     }
     fprintf(fp, "|");
@@ -315,7 +338,7 @@ Veiculo *carregarVeiculoPorRRN(int rrn) {
     }
 
     // Calcula o offset com base no tamanho do registro e no RRN
-    long offset = rrn * sizeof(Veiculo);
+    long offset = (rrn) * sizeof(Veiculo);
     fseek(fp, offset, SEEK_SET);
 
     // Lê o registro do veículo
@@ -328,4 +351,14 @@ Veiculo *carregarVeiculoPorRRN(int rrn) {
 
     fclose(fp);
     return veiculo;
+}
+
+void exibirMenu(){
+    printf("\nMenu:\n");
+    printf("1. Inserir um veículo\n");
+    printf("2. Remover um veículo\n");
+    printf("4. Buscar Veículo\n");
+    printf("5. Listar todos os veículos\n");
+    printf("0. Sair\n");
+
 }

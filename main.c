@@ -32,11 +32,10 @@ int main() {
             perror("Erro ao criar o arquivo de índice");
             return 1;
         }
-
+        
         // Inserir todos os veículos na árvore
         for (int i = 0; i < qtdRecords; i++) {
-            insert(veiculo[i].placa);
-          
+            insert(veiculo[i].placa,i);
         }
 
         // Gravar a estrutura inicial da árvore no arquivo e fechar
@@ -46,19 +45,13 @@ int main() {
 
     // Menu de operações para o usuário
     do {
-        printf("\nMenu:\n");
-        printf("1. Inserir um veículo\n");
-        printf("2. Remover um veículo\n");
-        printf("4. Buscar Veículo\n");
-        printf("5. Listar todos os veículos\n");
-        printf("0. Sair\n");
+        exibirMenu();
         scanf("%d", &op);
-
         switch (op) {
             case 1:
                 // Inserir um novo veículo
-                    insert("HHC8765");
-                   
+                    // insert("HHC8765");
+                // adicionarNovoCarro();
                 break;
 
             case 2:
@@ -73,16 +66,6 @@ int main() {
                 search(placa, root);
                 break;
 
-            case 5:
-                // Exibir todos os veículos e salvar a árvore no arquivo
-                fp = fopen("btree_M.idx", "w");
-                if (fp != NULL) {
-                    traversal(root, fp);
-                    fclose(fp);
-                } else {
-                    perror("Erro ao abrir o arquivo para gravação");
-                }
-                break;
         }
     } while (op != 0);
 
