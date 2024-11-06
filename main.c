@@ -10,17 +10,17 @@ int main() {
     Veiculo *veiculo = readFile();
 
     // Exibir todos os registros de veículos
-    for (int i = 0; i < qtdRecords; i++) {
-        printf("Registro de RRN %d\n", i);
-        printf("Placa: %s\n", veiculo[i].placa);
-        printf("Modelo: %s\n", veiculo[i].modelo);
-        printf("Marca: %s\n", veiculo[i].marca);
-        printf("Ano: %d\n", veiculo[i].ano);
-        printf("Categoria: %s\n", veiculo[i].categoria);
-        printf("Quilometragem: %d\n", veiculo[i].quilometragem);
-        printf("Status: %s\n", veiculo[i].status);
-        printf("---------------------------\n");
-    }
+    // for (int i = 0; i < qtdRecords; i++) {
+    //     printf("Registro de RRN %d\n", i);
+    //     printf("Placa: %s\n", veiculo[i].placa);
+    //     printf("Modelo: %s\n", veiculo[i].modelo);
+    //     printf("Marca: %s\n", veiculo[i].marca);
+    //     printf("Ano: %d\n", veiculo[i].ano);
+    //     printf("Categoria: %s\n", veiculo[i].categoria);
+    //     printf("Quilometragem: %d\n", veiculo[i].quilometragem);
+    //     printf("Status: %s\n", veiculo[i].status);
+    //     printf("---------------------------\n");
+    // }
 
     if (existe == 1) {
         // Carregar a raiz se o arquivo existir
@@ -31,24 +31,20 @@ int main() {
             printf("Falha ao carregar a raiz!\n");
         }
     } else {
-        // Criar um novo arquivo e inicializar a árvore se o arquivo não existir
+    
         fp = fopen("btree_M.idx", "w");
         if (fp == NULL) {
             perror("Erro ao criar o arquivo de índice");
             return 1;
         }
         
-        // Inserir todos os veículos na árvore
         for (int i = 0; i < qtdRecords; i++) {
             insert(veiculo[i].placa,i);
         }
 
-        // Gravar a estrutura inicial da árvore no arquivo e fechar
-        // traversal(root, fp);
         fclose(fp);
     }
 
-    // Menu de operações para o usuário
     do {
         exibirMenu();
         scanf("%d", &op);
@@ -58,23 +54,17 @@ int main() {
                 Veiculo *novoVeiculo = readFile();
                 insert(novoVeiculo[qtdRecords-1].placa,qtdRecords);
                 printf("chave: %s inserida",novoVeiculo[qtdRecords-1].placa);
-                // Inserir um novo veículo
-                    // insert("HHC8765");
-                // adicionarNovoCarro();
-                break;
 
+                break;
             case 2:
-                // Lógica para buscar um veículo
                 printf("Digite a placa para buscar: ");
                 char placa[8];
                 scanf("%s", placa);
                 search(placa, root);
                 break;
-
         }
     } while (op != 0);
 
-    // Liberar a memória dos veículos
     free(veiculo);
     free(root);
     return 0;

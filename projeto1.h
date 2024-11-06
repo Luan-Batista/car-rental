@@ -20,16 +20,16 @@ struct BTreeNode{
   Tchave val;
   char count;
   struct BTreeNode *link[MAX + 1];
-  int rrn;  // Novo campo para armazenar o RRN do nó
+  int rrn;  
 };
 
 struct BTreeNode *root;
-int current_rrn = 0;  // Variável global para controlar o RRN sequencial
+int current_rrn = 0; 
 
 
 
 
-struct BTreeNode *root = NULL;  // Ponteiro para a raiz
+struct BTreeNode *root = NULL; 
 
 typedef struct {
 char placa[TAMANHO_PLACA];
