@@ -7,9 +7,9 @@
 #define TAMANHO_MARCA 20
 #define TAMANHO_CATEGORIA 15
 #define TAMANHO_STATUS 16
-#define qtdRecords 30
 #define MAX 5
 #define MIN 2
+int qtdRecords = 30;
 
 typedef struct chave{
   char chave[MAX+1][8];
@@ -24,7 +24,7 @@ struct BTreeNode{
 };
 
 struct BTreeNode *root;
-int current_rrn = 1;  // Variável global para controlar o RRN sequencial
+int current_rrn = 0;  // Variável global para controlar o RRN sequencial
 
 
 

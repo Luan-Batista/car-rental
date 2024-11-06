@@ -338,7 +338,7 @@ Veiculo *carregarVeiculoPorRRN(int rrn) {
     }
 
     // Calcula o offset com base no tamanho do registro e no RRN
-    long offset = (rrn) * sizeof(Veiculo);
+    long offset = (rrn-1) * sizeof(Veiculo);
     fseek(fp, offset, SEEK_SET);
 
     // Lê o registro do veículo
@@ -356,9 +356,6 @@ Veiculo *carregarVeiculoPorRRN(int rrn) {
 void exibirMenu(){
     printf("\nMenu:\n");
     printf("1. Inserir um veículo\n");
-    printf("2. Remover um veículo\n");
-    printf("4. Buscar Veículo\n");
-    printf("5. Listar todos os veículos\n");
+    printf("2. Buscar Veículo\n");
     printf("0. Sair\n");
-
 }

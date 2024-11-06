@@ -25,6 +25,11 @@ int main() {
     if (existe == 1) {
         // Carregar a raiz se o arquivo existir
         root = carregarRaiz("btree_M.idx");
+        if (root != NULL) {
+            printf("Raiz carregada com sucesso!\n");
+        } else {
+            printf("Falha ao carregar a raiz!\n");
+        }
     } else {
         // Criar um novo arquivo e inicializar a árvore se o arquivo não existir
         fp = fopen("btree_M.idx", "w");
@@ -49,16 +54,16 @@ int main() {
         scanf("%d", &op);
         switch (op) {
             case 1:
+                qtdRecords++;
+                Veiculo *novoVeiculo = readFile();
+                insert(novoVeiculo[qtdRecords-1].placa,qtdRecords);
+                printf("chave: %s inserida",novoVeiculo[qtdRecords-1].placa);
                 // Inserir um novo veículo
                     // insert("HHC8765");
                 // adicionarNovoCarro();
                 break;
 
             case 2:
-                // Lógica para remover um veículo (implementar se necessário)
-                break;
-
-            case 4:
                 // Lógica para buscar um veículo
                 printf("Digite a placa para buscar: ");
                 char placa[8];
@@ -71,6 +76,6 @@ int main() {
 
     // Liberar a memória dos veículos
     free(veiculo);
-
+    free(root);
     return 0;
 }
